@@ -1,1 +1,1 @@
-require 'rhod'
+require './lib/rhod'

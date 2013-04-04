@@ -1,6 +1,5 @@
-require "rhod/version"
-require "rhod/command"
+require_relative "rhod/version"
+require_relative "rhod/backoffs"
+require_relative "rhod/command"
 
-module Rhod
-  # Your code goes here...
-end
+module Rhod; end
