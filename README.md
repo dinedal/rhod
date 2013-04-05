@@ -27,7 +27,9 @@ Rhod requires Ruby 1.9.2 or greater.
 
 Add this line to your application's Gemfile:
 
-    gem 'rhod'
+```ruby
+gem 'rhod'
+```
 
 And then execute:
 
@@ -41,18 +43,22 @@ Or install it yourself as:
 
 Rhod has a very simple API. Design your application as you would normally, then enclose network accessing portions of your code with:
 
-    Rhod.execute do
-      ...
-    end
+```ruby
+Rhod.execute do
+  ...
+end
+```
 
 This implements the "Fail Fast" scenario by default.
 
 Example, open a remote reasource, fail immediately if it fails:
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    Rhod.execute { open("http://google.com").read }
+Rhod.execute { open("http://google.com").read }
+```
 
 ### Retries with and without backoffs
 
@@ -62,44 +68,54 @@ Code within a `Rhod::Command` block with reties in use must be _idempotent_, i.e
 
 Rhod supports retying up to N times. By default it uses a logarithmic backoff:
 
-    Rhod::Backoffs.default.take(5)
-    # [0.7570232465074598, 2.403267722339301, 3.444932048942182, 4.208673319629471, 4.811984719351674]
+```ruby
+Rhod::Backoffs.default.take(5)
+# [0.7570232465074598, 2.403267722339301, 3.444932048942182, 4.208673319629471, 4.811984719351674]
+```
 
 Rhod also comes with exponential and constant (always the same value) backoffs. You can also supply any Enumerator that produces a series of numbers. See `lib/rhod/backoffs.rb` for examples.
 
 Example, open a remote reasource, fail once it has failed 10 times, with the default (logarithmic) backoff:
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    Rhod::Command.execute(:retries => 10) { open("http://google.com").read }
+Rhod::Command.execute(:retries => 10) { open("http://google.com").read }
+```
 
 Example, open a remote reasource, fail once it has failed 10 times, waiting 0.2 seconds between attempts:
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.constant_backoff(0.2)) do
-      open("http://google.com").read
-    end
+Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.constant_backoff(0.2)) do
+  open("http://google.com").read
+end
+```
 
 Example, open a remote reasource, fail once it has failed 10 times, with an exponetially growing wait time between attempts:
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.expoential_backoffs) do
-      open("http://google.com").read
-    end
+Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.expoential_backoffs) do
+  open("http://google.com").read
+end
+```
 
 Example, open a remote reasource, fail once it has failed 10 times, with no waiting between attempts:
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.constant_backoff(0)) do
-      open("http://google.com").read
-    end
+Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.constant_backoff(0)) do
+  open("http://google.com").read
+end
+```
 
 ### Fail Silent
 
@@ -107,52 +123,58 @@ In the event of a failure, Rhod falls back to a `fallback`. The most basic case 
 
 Example, open a remote reasource, if it fails return them empty string.
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    Rhod.execute(:fallback => -> {""}) do
-      open("http://google.com").read
-    end
+Rhod.execute(:fallback => -> {""}) do
+  open("http://google.com").read
+end
+```
 
 ### Fail w/ Fallback
 
 If there is another network call that can be used to fetch the reasource, it's possible to use another `Rhod::Command` once a failure has occurred.
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    search_engine_fallback = Rhod::Command.new(
-      :fallback => -> {""} # couldn't get anything
-    ) do
-      open("https://yahoo.com").read
-    end
+search_engine_fallback = Rhod::Command.new(
+  :fallback => -> {""} # couldn't get anything
+) do
+  open("https://yahoo.com").read
+end
 
-    Rhod.execute(:fallback => -> { search_engine_fallback.execute }) do
-      open("http://google.com").read
-    end
+Rhod.execute(:fallback => -> { search_engine_fallback.execute }) do
+  open("http://google.com").read
+end
+```
 
 ### Primary / Secondary ("Hot Spare") switch over
 
 Sometimes the fallback is just a part of normal operation. Just code in the state of which back end to access.
 
-    require 'open-uri'
-    require 'rhod'
+```ruby
+require 'open-uri'
+require 'rhod'
 
-    class SearchEngineHTML
-      attr_accessor :secondary
+class SearchEngineHTML
+  attr_accessor :secondary
 
-      def fetch
-        url = !@secondary ? "http://google.com" : "https://yahoo.com"
+  def fetch
+    url = !@secondary ? "http://google.com" : "https://yahoo.com"
 
-        Rhod.execute(url, :fallback => Proc.new { @secondary = !@secondary; fetch }) do |url|
-          open(url).read
-        end
-      end
+    Rhod.execute(url, :fallback => Proc.new { @secondary = !@secondary; fetch }) do |url|
+      open(url).read
     end
+  end
+end
 
-    search_engine_html = SearchEngineHTML.new
+search_engine_html = SearchEngineHTML.new
 
-    search_engine_html.fetch
+search_engine_html.fetch
+```
 
 ## Contributing
 
