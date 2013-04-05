@@ -4,9 +4,10 @@ class Rhod::Command
 
   def initialize(*args, &block)
     opts = args[-1].kind_of?(Hash) ? args.pop : {}
-    @request = block
     @args = args
     @args ||= []
+
+    @request = block
 
     @retries = opts[:retries]
     @retries ||= 0
@@ -20,8 +21,8 @@ class Rhod::Command
 
   ### Class methods
 
-  def self.execute(opts={}, &block)
-    this = self.new(opts, &block)
+  def self.execute(*args, &block)
+    this = self.new(*args, &block)
     this.execute
   end
 
