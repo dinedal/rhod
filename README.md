@@ -92,7 +92,7 @@ Example, open a remote reasource, fail once it has failed 10 times, with an expo
       open("http://google.com").read
     end
 
-Example, open a remote reasource, fail once it has failed 10 times, with waiting between attempts:
+Example, open a remote reasource, fail once it has failed 10 times, with no waiting between attempts:
 
     require 'open-uri'
     require 'rhod'
