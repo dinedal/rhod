@@ -22,5 +22,9 @@ describe Rhod::Command do
 
       val.must_equal 2
     end
+
+    it "takes args" do
+      Rhod::Command.new(1) {|a| 1 + a}.execute.must_equal 2
+    end
   end
 end
