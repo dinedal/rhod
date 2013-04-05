@@ -26,5 +26,29 @@ describe Rhod::Command do
     it "takes args" do
       Rhod::Command.new(1) {|a| 1 + a}.execute.must_equal 2
     end
+
+    describe "fallbacks" do
+      it "triggers fallback on failure" do
+        Rhod::Command.new(:fallback => -> { 1 }) {raise StandardError}.execute.must_equal 1
+      end
+
+      it "passes args to fallbacks" do
+        Rhod::Command.new(1, :fallback => ->(a) { 1 + a }) {raise StandardError}.execute.must_equal 2
+      end
+
+      it "only uses fallback after all retries" do
+        val = 0
+
+        Rhod::Command.new(
+          :retries => 1,
+          :backoffs => Rhod::Backoffs.constant_backoff(0),
+          :fallback => -> { 1 }) do
+          val += 1
+          raise StandardError
+        end.execute
+
+        val.must_equal 2
+      end
+    end
   end
 end

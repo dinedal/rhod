@@ -14,6 +14,8 @@ class Rhod::Command
 
     @backoffs = opts[:backoffs]
     @backoffs ||= Rhod::Backoffs.default
+
+    @fallback = opts[:fallback]
   end
 
   ### Class methods
@@ -34,6 +36,7 @@ class Rhod::Command
         sleep(@backoffs.next)
         retry
       else
+        return @fallback.call(*@args) if @fallback
         raise
       end
     end
