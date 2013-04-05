@@ -8,9 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Rhod::VERSION
   spec.authors       = ["Paul Bergeron"]
   spec.email         = ["paul.d.bergeron@gmail.com"]
-  spec.description   = %q{A High Avalibility framework for Ruby}
   spec.summary       = %q{A High Avalibility framework for Ruby}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/dinedal/rhod"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
