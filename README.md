@@ -3,8 +3,11 @@
 A Lightweight High Avalibility framework for Ruby, inspired by [Hystrix](https://github.com/Netflix/Hystrix)
 
 > Korben Dallas: You guard this with your life, or you're gonna look like this guy here! You green?
+>
 > DJ Ruby Rhod: G-green.
+>
 > Korben Dallas: Super green?
+>
 > DJ Ruby Rhod: Super green.
 
 Rhod helps you handle failures gracefully, even during a firefight. When your code has to interact with other services, it also means writing code to keep it running in the event of failure. Failures can include exceptions, timeouts, downed hosts, and any number of issues that are caused by events outside of your application.
