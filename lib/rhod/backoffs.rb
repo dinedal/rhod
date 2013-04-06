@@ -1,21 +1,38 @@
 module Rhod::Backoffs
 
   extend self
-  # Returns a generator of a expoentially increasing series starting at 1
-  def expoential_backoffs
-    Enumerator.new do |yielder|
-      x = 0
-      loop do
-        x += 1
-        yielder << (1.0/2.0*(2.0**x - 1.0)).ceil
+
+  def backoff_sugar_to_enumerator(backoff)
+    if backoff.is_a?(Enumerator)
+      backoff
+    elsif backoff.is_a?(Numeric)
+      constant_backoff(backoff)
+    elsif backoff.is_a?(String)
+      n = (backoff[1..-1].to_i)
+      case backoff[0]
+      when "x"
+        expoential_backoffs(n)
+      when "l"
+        logarithmic_backoffs(n)
       end
     end
   end
 
-  # Returns a generator of a logarithmicly increasing series starting at 0.3
-  def logarithmic_backoffs
+  # Returns a generator of a expoentially increasing series starting at n
+  def expoential_backoffs(n=1)
     Enumerator.new do |yielder|
-      x = 0.3
+      x = (n - 1)
+      loop do
+        x += 1
+        yielder << 2.0**x
+      end
+    end
+  end
+
+  # Returns a generator of a logarithmicly increasing series starting at n
+  def logarithmic_backoffs(n=0.3)
+    Enumerator.new do |yielder|
+      x = n
       loop do
         x += 1
         yielder << Math.log2(x**2)
@@ -24,10 +41,10 @@ module Rhod::Backoffs
   end
 
   # Always the same backoff
-  def constant_backoff(i)
+  def constant_backoff(n)
     Enumerator.new do |yielder|
       loop do
-        yielder << i
+        yielder << n
       end
     end
   end
