@@ -15,6 +15,13 @@ module Rhod::Backoffs
       when "l"
         logarithmic_backoffs(n)
       end
+    elsif backoff.is_a?(Symbol)
+      case backoff
+      when :^
+        expoential_backoffs
+      when :l
+        logarithmic_backoffs
+      end
     end
   end
 
