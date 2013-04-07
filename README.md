@@ -117,6 +117,18 @@ Rhod.execute(:retries => 10, :backoffs => 0) do
 end
 ```
 
+Example, open a remote reasource, fail once it has failed 10 times, with a random wait between 1 and 5 seconds on each attempt
+
+```ruby
+require 'open-uri'
+require 'rhod'
+
+Rhod.execute(:retries => 10, :backoffs => 'r1..5') do
+  open("http://google.com").read
+end
+```
+
+
 ### Fail Silent
 
 In the event of a failure, Rhod falls back to a `fallback`. The most basic case is to fall back to a constant value.
