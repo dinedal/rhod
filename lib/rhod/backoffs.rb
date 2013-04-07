@@ -10,7 +10,7 @@ module Rhod::Backoffs
     elsif backoff.is_a?(String)
       n = (backoff[1..-1].to_i)
       case backoff[0]
-      when "x"
+      when "^"
         expoential_backoffs(n)
       when "l"
         logarithmic_backoffs(n)
