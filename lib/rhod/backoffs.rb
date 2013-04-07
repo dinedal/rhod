@@ -7,13 +7,19 @@ module Rhod::Backoffs
       backoff
     elsif backoff.is_a?(Numeric)
       constant_backoff(backoff)
+    elsif backoff.is_a?(Range)
+      random_backoffs(backoff)
     elsif backoff.is_a?(String)
-      n = (backoff[1..-1].to_i)
+      n = (backoff[1..-1].to_f)
       case backoff[0]
       when "^"
         expoential_backoffs(n)
       when "l"
         logarithmic_backoffs(n)
+      when "r"
+        min = backoff[1..-1].split("..")[0].to_f
+        max = backoff[1..-1].split("..")[1].to_f
+        random_backoffs((min..max))
       end
     elsif backoff.is_a?(Symbol)
       case backoff
@@ -21,6 +27,8 @@ module Rhod::Backoffs
         expoential_backoffs
       when :l
         logarithmic_backoffs
+      when :r
+        random_backoffs
       end
     end
   end
@@ -46,6 +54,7 @@ module Rhod::Backoffs
       end
     end
   end
+  alias default logarithmic_backoffs
 
   # Always the same backoff
   def constant_backoff(n)
@@ -56,5 +65,14 @@ module Rhod::Backoffs
     end
   end
 
-  alias default logarithmic_backoffs
+  # Returns a generator of random numbers falling inside of a range
+  def random_backoffs(range=(0..10))
+    float_range = (range.min.to_f..range.max.to_f)
+    Enumerator.new do |yielder|
+      loop do
+        yielder << rand(float_range)
+      end
+    end
+  end
+
 end
