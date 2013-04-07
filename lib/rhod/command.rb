@@ -13,7 +13,7 @@ class Rhod::Command
     @retries ||= 0
     @attempts = 0
 
-    @backoffs = opts[:backoffs]
+    @backoffs = Rhod::Backoffs.backoff_sugar_to_enumerator(opts[:backoffs])
     @backoffs ||= Rhod::Backoffs.default
 
     @fallback = opts[:fallback]

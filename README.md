@@ -90,9 +90,9 @@ Example, open a remote reasource, fail once it has failed 10 times, waiting 0.2 
 require 'open-uri'
 require 'rhod'
 
-Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.constant_backoff(0.2)) do
-  open("http://google.com").read
-end
+    Rhod.execute(:retries => 10, :backoffs => 0.2) do
+      open("http://google.com").read
+    end
 ```
 
 Example, open a remote reasource, fail once it has failed 10 times, with an exponetially growing wait time between attempts:
@@ -101,7 +101,7 @@ Example, open a remote reasource, fail once it has failed 10 times, with an expo
 require 'open-uri'
 require 'rhod'
 
-Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.expoential_backoffs) do
+Rhod.execute(:retries => 10, :backoffs => :^) do
   open("http://google.com").read
 end
 ```
@@ -112,7 +112,7 @@ Example, open a remote reasource, fail once it has failed 10 times, with no wait
 require 'open-uri'
 require 'rhod'
 
-Rhod.execute(:retries => 10, :backoffs => Rhod::Backoffs.constant_backoff(0)) do
+Rhod.execute(:retries => 10, :backoffs => 0) do
   open("http://google.com").read
 end
 ```

@@ -9,45 +9,67 @@ describe Rhod::Command do
   end
 
   describe "execute" do
-    it "retries requests" do
-      val = 0
-
-      begin
-        Rhod::Command.new(:retries => 1, :backoffs => Rhod::Backoffs.constant_backoff(0)) do
-          val += 1
-          raise StandardError
-        end.execute
-      rescue
-      end
-
-      val.must_equal 2
-    end
-
     it "takes args" do
       Rhod::Command.new(1) {|a| 1 + a}.execute.must_equal 2
     end
 
-    describe "fallbacks" do
-      it "triggers fallback on failure" do
-        Rhod::Command.new(:fallback => -> { 1 }) {raise StandardError}.execute.must_equal 1
+    describe "with failures" do
+
+      describe "retrying" do
+        it "retries" do
+          val = 0
+
+          begin
+            Rhod::Command.new(:retries => 1, :backoffs => 0) do
+              val += 1
+              raise StandardError
+            end.execute
+          rescue
+          end
+
+          val.must_equal 2
+        end
+
+        it "uses backoffs" do
+          backoff = MiniTest::Mock.new
+          backoff.expect(:next, 0)
+
+          Rhod::Backoffs.stub(:constant_backoff, backoff) do
+            begin
+              Rhod::Command.new(:retries => 1, :backoffs => 0) do
+                val += 1
+                raise StandardError
+              end.execute
+            rescue
+            end
+          end
+          backoff.verify
+        end
+
       end
 
-      it "passes args to fallbacks" do
-        Rhod::Command.new(1, :fallback => ->(a) { 1 + a }) {raise StandardError}.execute.must_equal 2
-      end
+      describe "it uses fallbacks" do
+        it "triggers fallback on failure" do
+          Rhod::Command.new(:fallback => -> { 1 }) {raise StandardError}.execute.must_equal 1
+        end
 
-      it "only uses fallback after all retries" do
-        val = 0
+        it "passes args to fallbacks" do
+          Rhod::Command.new(1, :fallback => ->(a) { 1 + a }) {raise StandardError}.execute.must_equal 2
+        end
 
-        Rhod::Command.new(
-          :retries => 1,
-          :backoffs => Rhod::Backoffs.constant_backoff(0),
-          :fallback => -> { 1 }) do
-          val += 1
-          raise StandardError
-        end.execute
+        it "only uses fallback after all retries" do
+          val = 0
 
-        val.must_equal 2
+          Rhod::Command.new(
+            :retries => 1,
+            :backoffs => 0,
+            :fallback => -> { 1 }) do
+            val += 1
+            raise StandardError
+          end.execute
+
+          val.must_equal 2
+        end
       end
     end
   end
