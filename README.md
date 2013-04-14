@@ -60,6 +60,29 @@ require 'rhod'
 Rhod.execute { open("http://google.com").read }
 ```
 
+## An Important note about arguements:
+
+Do not reach into the outer scope when using Rhod, instead you can pass arguements into your block like so:
+
+```ruby
+address = "http://google.com"
+
+Rhod.execute(address) do |url|
+   open(url).read
+end
+```
+
+If you need to pass options to Rhod, pass them as the last arguement:
+
+```ruby
+# Works the same as the above, with but with retires.
+address = "http://google.com"
+
+Rhod.execute(address, :retries => 5) do |url|
+   open(url).read
+end
+```
+
 ### Retries with and without backoffs
 
 #### Idempotence Caution
