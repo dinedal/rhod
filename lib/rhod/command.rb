@@ -2,8 +2,6 @@ class Rhod::Command
 
   EXCEPTIONS = [Exception, StandardError]
 
-  @@pools = {}
-
   def initialize(*args, &block)
     opts = args[-1].kind_of?(Hash) ? args.pop : {}
     @args = args
@@ -21,16 +19,8 @@ class Rhod::Command
     @fallback = opts[:fallback]
     @fallback ||= Rhod.defaults[:fallback]
 
-    @is_pooled = opts[:pool] ? true : false
-    if @is_pooled
-      @pool_name = opts[:pool][:name]
-
-      @pool_size = opts[:pool][:size]
-      @pool_size ||= 3
-
-      @pool_timeout = opts[:pool][:timeout]
-      @pool_timeout ||= 5
-    end
+    @pool = Rhod.connection_pools[opts[:pool]]
+    @pool ||= Rhod.connection_pools[:default]
   end
 
   ### Class methods
@@ -43,16 +33,13 @@ class Rhod::Command
   ### Instance methods
 
   def execute
-    if @is_pooled
-      if @pool_name
-        pool = @@pools[@pool_name]
-      else
-        pool = @@pools[@pool_name = invoking_method]
-      end
-    end
-
     begin
-      @request.call(*@args)
+      @pool.with do |conn|
+        @args = [conn].concat(@args)
+        @args[0] == nil ? @args.shift : nil
+
+        @request.call(*@args)
+      end
     rescue *EXCEPTIONS
       @attempts += 1
       if @attempts <= @retries
@@ -62,17 +49,6 @@ class Rhod::Command
         return @fallback.call(*@args) if @fallback
         raise
       end
-    end
-  end
-
-  private
-
-  def invoking_method
-    # Ruby 1.9 support
-    if !defined?(caller_locations)
-      caller[0]
-    else
-      caller_locations(1,1).first
     end
   end
 
