@@ -6,4 +6,15 @@ module Rhod
   def self.execute(*args, &block)
     Rhod::Command.execute(*args, &block)
   end
+
+  class << self
+    attr_accessor :defaults
+  end
+
+  self.defaults = {
+    retries: 0,
+    backoffs: Rhod::Backoffs.default,
+    fallback: nil,
+  }
+
 end
