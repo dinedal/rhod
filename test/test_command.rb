@@ -72,5 +72,19 @@ describe Rhod::Command do
         end
       end
     end
+
+    describe "with connection pools" do
+      it "uses the provided pool" do
+        Rhod.connection_pools[:test] = ConnectionPool.new(size: 1, timeout: 0) { :conn }
+        Rhod::Command.new {|a| a}.execute.must_equal nil
+        Rhod::Command.new(pool: :test) {|a| a}.execute.must_equal :conn
+      end
+
+      it "correctly handles arguements" do
+        Rhod.connection_pools[:test] = ConnectionPool.new(size: 1, timeout: 0) { :conn }
+        Rhod::Command.new(1, pool: :test) {|a, b| [a,b]}.execute.must_equal [:conn, 1]
+      end
+    end
+
   end
 end
