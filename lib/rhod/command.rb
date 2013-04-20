@@ -10,13 +10,14 @@ class Rhod::Command
     @request = block
 
     @retries = opts[:retries]
-    @retries ||= 0
+    @retries ||= Rhod.defaults[:retries]
     @attempts = 0
 
     @backoffs = Rhod::Backoffs.backoff_sugar_to_enumerator(opts[:backoffs])
-    @backoffs ||= Rhod::Backoffs.default
+    @backoffs ||= Rhod.defaults[:backoffs]
 
     @fallback = opts[:fallback]
+    @fallback ||= Rhod.defaults[:fallback]
   end
 
   ### Class methods
