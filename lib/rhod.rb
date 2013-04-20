@@ -18,11 +18,10 @@ module Rhod
     retries: 0,
     backoffs: Rhod::Backoffs.default,
     fallback: nil,
-    pool: {size: 3, timeout: 5},
   }
 
   self.connection_pools = {
-    default: ConnectionPool.new(size: 1, timeout:0) { nil }
+    default: ConnectionPool.new(size: 1, timeout: 0) { nil }
   }
 
 end

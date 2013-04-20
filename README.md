@@ -39,6 +39,17 @@ Or install it yourself as:
 
     $ gem install rhod
 
+## Configuration
+
+To configure Rhod's defaults, change any of the keys in `Rhod.defaults`
+
+```ruby
+Rhod.defaults
+=> {:retries=>0,
+ :backoffs=>#<Enumerator: ...>,
+ :fallback=>nil}
+```
+
 ## Usage
 
 Rhod has a very simple API. Design your application as you would normally, then enclose network accessing portions of your code with:
@@ -60,9 +71,9 @@ require 'rhod'
 Rhod.execute { open("http://google.com").read }
 ```
 
-## An Important note about arguements:
+## An Important note about arguments:
 
-Do not reach into the outer scope when using Rhod, instead you can pass arguements into your block like so:
+Do not reach into the outer scope when using Rhod, instead you can pass arguments into your block like so:
 
 ```ruby
 address = "http://google.com"
@@ -72,7 +83,7 @@ Rhod.execute(address) do |url|
 end
 ```
 
-If you need to pass options to Rhod, pass them as the last arguement:
+If you need to pass options to Rhod, pass them as the last argument:
 
 ```ruby
 # Works the same as the above, with but with retires.
@@ -209,6 +220,28 @@ end
 search_engine_html = SearchEngineHTML.new
 
 search_engine_html.fetch
+```
+
+## Connection Pools
+
+Sometimes you're connecting to a remote reasource using a driver that doesn't support connection pooling, which will limit the amount of strain your application puts on that reasource, and allow for reuse of existing connections instead of increasing overhead by reconnecting each time. Connection Pool support in Rhod is provided by the [connection_pool](https://github.com/mperham/connection_pool) gem.
+
+```ruby
+require 'rhod'
+require 'redis'
+require 'connection_pool'
+
+Rhod.connection_pools[:redis] = ConnectionPool.new(size:3, timeout:5) { Redis.new }
+
+Rhod.execute(:pool => :redis) {|redis| redis.set("foo", "bar") }
+```
+
+The connection is always the first argument passed into the block, the other arguments are passed in their original order after.
+
+```ruby
+key   = "foo"
+value = "bar"
+Rhod.execute(key, value, :pool => :redis) {|redis, k, v| redis.set(k, v) }
 ```
 
 ## Contributing
