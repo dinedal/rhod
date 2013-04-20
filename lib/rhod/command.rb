@@ -18,6 +18,9 @@ class Rhod::Command
 
     @fallback = opts[:fallback]
     @fallback ||= Rhod.defaults[:fallback]
+
+    @pool = Rhod.connection_pools[opts[:pool]]
+    @pool ||= Rhod.connection_pools[:default]
   end
 
   ### Class methods
@@ -31,7 +34,12 @@ class Rhod::Command
 
   def execute
     begin
-      @request.call(*@args)
+      @pool.with do |conn|
+        @args = [conn].concat(@args)
+        @args[0] == nil ? @args.shift : nil
+
+        @request.call(*@args)
+      end
     rescue *EXCEPTIONS
       @attempts += 1
       if @attempts <= @retries
