@@ -12,14 +12,30 @@ A Lightweight High Avalibility framework for Ruby, inspired by [Hystrix](https:/
 
 Rhod helps you handle failures gracefully, even during a firefight. When your code has to interact with other services, it also means writing code to keep it running in the event of failure. Failures can include exceptions, timeouts, downed hosts, and any number of issues that are caused by events outside of your application.
 
+# Is it any good?
+
+[Yes](https://news.ycombinator.com/item?id=3067434)
+
+## Usage
+
+Rhod has a very simple API. Design your application as you would normally, then enclose network accessing portions of your code with:
+
+```ruby
+Rhod.execute do
+  ...
+end
+```
+
+This implements the "Fail Fast" scenario by default.
+
 Rhod allows you to fully customize how your application reacts when it can't reach a service it needs. but by default it is configured for a 'fail fast' scenario. With some configuration, Rhod can support the following failure scenarios and variations on them:
 
-  - Fail Fast
-  - Retry N times before Fail
-  - Retry N times with progressive backoffs before Fail
-  - Fail Silent
-  - Fail w/ Fallback
-  - Primary / Secondary ("hot spare") switch over
+  - [Fail Fast](https://github.com/dinedal/rhod/wiki/Fail-Fast)
+  - [Retry N times before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-before-Fail)
+  - [Retry N times with progressive backoffs before Fail](Retry-N-times-with-progressive-backoffs-before-Fail)
+  - [Fail Silent](https://github.com/dinedal/rhod/wiki/Fail-Silent)
+  - [Fail w/ Fallback](https://github.com/dinedal/rhod/wiki/Fail-with-Fallback)
+  - [Primary / Secondary ("hot spare") switch over](https://github.com/dinedal/rhod/wiki/Primary-Secondary-Switchover)
 
 ## Installation
 
@@ -50,176 +66,25 @@ Rhod.defaults
  :fallback=>nil}
 ```
 
-## Usage
-
-Rhod has a very simple API. Design your application as you would normally, then enclose network accessing portions of your code with:
-
-```ruby
-Rhod.execute do
-  ...
-end
-```
-
-This implements the "Fail Fast" scenario by default.
-
-Example, open a remote reasource, fail immediately if it fails:
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-Rhod.execute { open("http://google.com").read }
-```
-
-## An Important note about arguments:
-
-Do not reach into the outer scope when using Rhod, instead you can pass arguments into your block like so:
-
-```ruby
-address = "http://google.com"
-
-Rhod.execute(address) do |url|
-   open(url).read
-end
-```
-
-If you need to pass options to Rhod, pass them as the last argument:
-
-```ruby
-# Works the same as the above, with but with retires.
-address = "http://google.com"
-
-Rhod.execute(address, :retries => 5) do |url|
-   open(url).read
-end
-```
-
-### Retries with and without backoffs
-
-#### Idempotence Caution
+## Idempotence Caution
 
 Code within a `Rhod::Command` block with reties in use must be _idempotent_, i.e., safe to run multiple times.
 
-Rhod supports retying up to N times. By default it uses a logarithmic backoff:
+## Passing arguments
+
+Code within a `Rhod::Command` should avoid leaking memory and/or scope by having arguments passed to it:
+
+### Good use of argument passing:
 
 ```ruby
-Rhod::Backoffs.default.take(5)
-# [0.7570232465074598, 2.403267722339301, 3.444932048942182, 4.208673319629471, 4.811984719351674]
+Rhod.execute("http://google.com") {|url| open(url).read}
 ```
 
-Rhod also comes with exponential and constant (always the same value) backoffs. You can also supply any Enumerator that produces a series of numbers. See `lib/rhod/backoffs.rb` for examples.
-
-Example, open a remote reasource, fail once it has failed 10 times, with the default (logarithmic) backoff:
+You can still pass arguments to Rhod as the last argument passed to `Rhod.execute`
 
 ```ruby
-require 'open-uri'
-require 'rhod'
-
-Rhod::Command.execute(:retries => 10) { open("http://google.com").read }
-```
-
-Example, open a remote reasource, fail once it has failed 10 times, waiting 0.2 seconds between attempts:
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-    Rhod.execute(:retries => 10, :backoffs => 0.2) do
-      open("http://google.com").read
-    end
-```
-
-Example, open a remote reasource, fail once it has failed 10 times, with an exponetially growing wait time between attempts:
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-Rhod.execute(:retries => 10, :backoffs => :^) do
-  open("http://google.com").read
-end
-```
-
-Example, open a remote reasource, fail once it has failed 10 times, with no waiting between attempts:
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-Rhod.execute(:retries => 10, :backoffs => 0) do
-  open("http://google.com").read
-end
-```
-
-Example, open a remote reasource, fail once it has failed 10 times, with a random wait between 1 and 5 seconds on each attempt
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-Rhod.execute(:retries => 10, :backoffs => 'r1..5') do
-  open("http://google.com").read
-end
-```
-
-
-### Fail Silent
-
-In the event of a failure, Rhod falls back to a `fallback`. The most basic case is to fall back to a constant value.
-
-Example, open a remote reasource, if it fails return them empty string.
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-Rhod.execute(:fallback => -> {""}) do
-  open("http://google.com").read
-end
-```
-
-### Fail w/ Fallback
-
-If there is another network call that can be used to fetch the reasource, it's possible to use another `Rhod::Command` once a failure has occurred.
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-search_engine_fallback = Rhod::Command.new(
-  :fallback => -> {""} # couldn't get anything
-) do
-  open("https://yahoo.com").read
-end
-
-Rhod.execute(:fallback => -> { search_engine_fallback.execute }) do
-  open("http://google.com").read
-end
-```
-
-### Primary / Secondary ("Hot Spare") switch over
-
-Sometimes the fallback is just a part of normal operation. Just code in the state of which back end to access.
-
-```ruby
-require 'open-uri'
-require 'rhod'
-
-class SearchEngineHTML
-  attr_accessor :secondary
-
-  def fetch
-    url = !@secondary ? "http://google.com" : "https://yahoo.com"
-
-    Rhod.execute(url, :fallback => Proc.new { @secondary = !@secondary; fetch }) do |url|
-      open(url).read
-    end
-  end
-end
-
-search_engine_html = SearchEngineHTML.new
-
-search_engine_html.fetch
+# Attempt 5 times before failing
+Rhod.execute("http://google.com", :retries => 5) {|url| open(url).read}
 ```
 
 ## Connection Pools
