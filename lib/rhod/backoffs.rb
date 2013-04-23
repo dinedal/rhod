@@ -3,76 +3,40 @@ module Rhod::Backoffs
   extend self
 
   def backoff_sugar_to_enumerator(backoff)
-    if backoff.is_a?(Enumerator)
+    if backoff.is_a?(Rhod::Backoffs::Backoff)
       backoff
     elsif backoff.is_a?(Numeric)
-      constant_backoff(backoff)
+      Rhod::Backoffs::Constant.new(backoff)
     elsif backoff.is_a?(Range)
-      random_backoffs(backoff)
+      Rhod::Backoffs::Random.new(backoff)
     elsif backoff.is_a?(String)
       n = (backoff[1..-1].to_f)
       case backoff[0]
       when "^"
-        expoential_backoffs(n)
+        Rhod::Backoffs::Exponential.new(n)
       when "l"
-        logarithmic_backoffs(n)
+        Rhod::Backoffs::Logarithmic.new(n)
       when "r"
         min = backoff[1..-1].split("..")[0].to_f
         max = backoff[1..-1].split("..")[1].to_f
-        random_backoffs((min..max))
+        Rhod::Backoffs::Random.new((min..max))
       end
     elsif backoff.is_a?(Symbol)
       case backoff
       when :^
-        expoential_backoffs
+        Rhod::Backoffs::Exponential.new(0)
       when :l
-        logarithmic_backoffs
+        Rhod::Backoffs::Logarithmic.new(1.3)
       when :r
-        random_backoffs
-      end
-    end
-  end
-
-  # Returns a generator of a expoentially increasing series starting at n
-  def expoential_backoffs(n=1)
-    Enumerator.new do |yielder|
-      x = (n - 1)
-      loop do
-        x += 1
-        yielder << 2.0**x
-      end
-    end
-  end
-
-  # Returns a generator of a logarithmicly increasing series starting at n
-  def logarithmic_backoffs(n=0.3)
-    Enumerator.new do |yielder|
-      x = n
-      loop do
-        x += 1
-        yielder << Math.log2(x**2)
-      end
-    end
-  end
-  alias default logarithmic_backoffs
-
-  # Always the same backoff
-  def constant_backoff(n)
-    Enumerator.new do |yielder|
-      loop do
-        yielder << n
-      end
-    end
-  end
-
-  # Returns a generator of random numbers falling inside of a range
-  def random_backoffs(range=(0..10))
-    float_range = (range.min.to_f..range.max.to_f)
-    Enumerator.new do |yielder|
-      loop do
-        yielder << rand(float_range)
+        Rhod::Backoffs::Random.new(0..10)
       end
     end
   end
 
 end
+
+require_relative 'backoffs/backoff.rb'
+require_relative 'backoffs/constant.rb'
+require_relative 'backoffs/exponential.rb'
+require_relative 'backoffs/logarithmic.rb'
+require_relative 'backoffs/random.rb'

@@ -16,7 +16,7 @@ module Rhod
 
   self.defaults = {
     retries: 0,
-    backoffs: Rhod::Backoffs.default,
+    backoffs: Rhod::Backoffs::Logarithmic.new(1.3),
     fallback: nil,
   }
 

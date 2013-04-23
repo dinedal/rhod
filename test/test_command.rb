@@ -34,7 +34,7 @@ describe Rhod::Command do
           backoff = MiniTest::Mock.new
           backoff.expect(:next, 0)
 
-          Rhod::Backoffs.stub(:constant_backoff, backoff) do
+          Rhod::Backoffs::Constant.stub(:new, backoff) do
             begin
               Rhod::Command.new(:retries => 1, :backoffs => 0) do
                 val += 1
