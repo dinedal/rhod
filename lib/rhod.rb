@@ -4,14 +4,21 @@ require_relative "rhod/command"
 require 'connection_pool'
 
 module Rhod
+
+  class << self
+    attr_accessor :defaults, :connection_pools, :profiles
+  end
+
   def self.execute(*args, &block)
     Rhod::Command.execute(*args, &block)
   end
 
-  class << self
-    attr_accessor :defaults
-
-    attr_accessor :connection_pools
+  def self.create_profile(name, options={})
+    profiles ||= {}
+    profiles[name] = options
+    self.class.__send__(:define_method, :"with_#{name}") do |*args, &block|
+      Rhod::Command.execute(*args, profiles[name], &block)
+    end
   end
 
   self.defaults = {
