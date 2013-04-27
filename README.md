@@ -37,6 +37,8 @@ Rhod allows you to fully customize how your application reacts when it can't rea
   - [Fail w/ Fallback](https://github.com/dinedal/rhod/wiki/Fail-with-Fallback)
   - [Primary / Secondary ("hot spare") switch over](https://github.com/dinedal/rhod/wiki/Primary-Secondary-Switchover)
 
+Check the wiki for more documentation.
+
 ## Installation
 
 Rhod requires Ruby 1.9.2 or greater.
