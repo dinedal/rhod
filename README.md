@@ -76,6 +76,35 @@ Code within a `Rhod::Command` block with reties in use must be _idempotent_, i.e
 
 Code within a `Rhod::Command` should avoid leaking memory and/or scope by having arguments passed to it:
 
+## Controlling Retries Examples
+
+Default Behavior: logarithmic backoff (0, 2, 3.2, 4, 4.6 secs before raising exception)
+```ruby
+Rhod.execute(retries: 5) {}
+Rhod.execute(retries: 5, backoffs: 'l') {}
+```
+
+Exponential Backoff: (0,1,4,9,16 secs)
+```ruby
+Rhod.execute(retries: 5, backoffs: '^') {}
+```
+
+Constant backoff: (2, 2, 2, 2, 2 secs)
+```ruby
+Rhod.execute(retries: 5, backoffs: 2) {}
+```
+
+Random Backoffs (default [1..10]): (1,2,6,10,2 secs)
+```ruby
+Rhod.execute(retries: 5, backoffs: 'r') {}
+Rhod.execute(retries: 5, backoffs: 1..10) {}
+```
+
+Custom Enumator Backoff (1,2,3,4,5 secs)
+```ruby
+Rhod.execute(retries: 5, backoffs: [1..5].each) {}
+```
+
 ### Good use of argument passing:
 
 ```ruby
