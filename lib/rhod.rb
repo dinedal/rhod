@@ -1,7 +1,8 @@
+require 'connection_pool'
 require_relative "rhod/version"
 require_relative "rhod/backoffs"
 require_relative "rhod/command"
-require 'connection_pool'
+require_relative "rhod/profile"
 
 module Rhod
 
@@ -13,19 +14,9 @@ module Rhod
     Rhod::Command.execute(*args, &block)
   end
 
-  def self.create_profile(name, options={})
-    profiles ||= {}
-    profiles[name] = options
-    self.class.__send__(:define_method, :"with_#{name}") do |*args, &block|
-      Rhod::Command.execute(*args, profiles[name], &block)
-    end
+  def self.create_profile(options={})
+    Rhod::Profile.new(options)
   end
-
-  self.defaults = {
-    retries: 0,
-    backoffs: Rhod::Backoffs::Logarithmic.new(1.3),
-    fallback: nil,
-  }
 
   self.connection_pools = {
     default: ConnectionPool.new(size: 1, timeout: 0) { nil }
