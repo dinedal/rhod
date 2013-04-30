@@ -10,17 +10,16 @@ class Rhod::Command
     @request = block
 
     @retries = opts[:retries]
-    @retries ||= Rhod.defaults[:retries]
+    @retries ||= 0
     @attempts = 0
 
     @backoffs = Rhod::Backoffs.backoff_sugar_to_enumerator(opts[:backoffs])
-    @backoffs ||= Rhod.defaults[:backoffs]
+    @backoffs ||= Rhod::Backoffs::Logarithmic.new(1.3)
 
     @fallback = opts[:fallback]
-    @fallback ||= Rhod.defaults[:fallback]
 
     @pool = Rhod.connection_pools[opts[:pool]]
-    @pool ||= Rhod.connection_pools[:default]
+    @pool ||= ConnectionPool.new(size: 1, timeout: 0) { nil }
   end
 
   ### Class methods

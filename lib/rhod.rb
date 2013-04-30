@@ -11,7 +11,7 @@ module Rhod
   end
 
   def self.execute(*args, &block)
-    Rhod::Command.execute(*args, &block)
+    Rhod.with_default(*args, &block)
   end
 
   def self.create_profile(options={})
