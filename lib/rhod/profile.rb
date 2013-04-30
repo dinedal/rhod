@@ -14,7 +14,7 @@ class Rhod::Profile < Hash
     options.each {|k,v| self[k] = v }
 
     # Syntax sugar: named .with_#{profile} methods on this class and the module
-    @@profiles[options[:name]] = self
+    @@profiles[name] = self
 
     self.class.__send__(:define_method, :"with_#{name}") do |*args, &block|
       Rhod::Command.execute(*args, @@profiles[name], &block)

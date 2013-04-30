@@ -20,6 +20,9 @@ class Rhod::Command
 
     @pool = Rhod.connection_pools[opts[:pool]]
     @pool ||= ConnectionPool.new(size: 1, timeout: 0) { nil }
+
+    @exceptions = opts[:exceptions]
+    @exceptions ||= EXCEPTIONS
   end
 
   ### Class methods
@@ -39,7 +42,7 @@ class Rhod::Command
 
         @request.call(*@args)
       end
-    rescue *EXCEPTIONS
+    rescue *@exceptions
       @attempts += 1
       if @attempts <= @retries
         sleep(@backoffs.next)

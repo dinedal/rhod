@@ -6,20 +6,12 @@ require_relative "rhod/profile"
 
 module Rhod
 
-  class << self
-    attr_accessor :defaults, :connection_pools, :profiles
-  end
-
   def self.execute(*args, &block)
     Rhod.with_default(*args, &block)
   end
 
-  def self.create_profile(options={})
-    Rhod::Profile.new(options)
+  def self.create_profile(name, options={})
+    Rhod::Profile.new(name, options)
   end
-
-  self.connection_pools = {
-    default: ConnectionPool.new(size: 1, timeout: 0) { nil }
-  }
 
 end
