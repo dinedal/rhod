@@ -18,7 +18,7 @@ class Rhod::Command
 
     @fallback = opts[:fallback]
 
-    @pool = Rhod.connection_pools[opts[:pool]]
+    @pool = opts[:pool]
     @pool ||= ConnectionPool.new(size: 1, timeout: 0) { nil }
 
     @exceptions = opts[:exceptions]
