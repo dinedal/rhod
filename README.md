@@ -21,12 +21,12 @@ Rhod helps you handle failures gracefully, even during a firefight. When your co
 Rhod has a very simple API. Design your application as you would normally, then enclose network accessing portions of your code with:
 
 ```ruby
-Rhod.execute do
+Rhod.with_default do
   ...
 end
 ```
 
-This implements the "Fail Fast" scenario by default.
+This implements the [Fail Fast](https://github.com/dinedal/rhod/wiki/Fail-Fast) scenario by default.
 
 Rhod allows you to fully customize how your application reacts when it can't reach a service it needs. but by default it is configured for a 'fail fast' scenario. With some configuration, Rhod can support the following failure scenarios and variations on them:
 
@@ -37,7 +37,11 @@ Rhod allows you to fully customize how your application reacts when it can't rea
   - [Fail w/ Fallback](https://github.com/dinedal/rhod/wiki/Fail-with-Fallback)
   - [Primary / Secondary ("hot spare") switch over](https://github.com/dinedal/rhod/wiki/Primary-Secondary-Switchover)
 
-Check the wiki for more documentation.
+Check the [wiki](https://github.com/dinedal/rhod/wiki/) for more documentation.
+
+## Upgrading from v0.0.x to v0.1.x
+
+The only breaking API change is that backoffs have changed in their creation, dropping `Enumerator` in favor of a simple threadsafe class. Please switch any custom backoff code subclass `Rhod::Backoffs::Backoff`.
 
 ## Installation
 
@@ -59,13 +63,42 @@ Or install it yourself as:
 
 ## Configuration
 
-To configure Rhod's defaults, change any of the keys in `Rhod.defaults`
+To configure Rhod's defaults, just overwrite the default profile with any changes you'd like to make.
 
 ```ruby
-Rhod.defaults
-=> {:retries=>0,
- :backoffs=>#<Enumerator: ...>,
- :fallback=>nil}
+Rhod.create_profile(:default, retries: 10)
+# => {:retries=>10,
+#  :backoffs=>#<Rhod::Backoffs::Logarithmic:0x007f89afaeb4c0 @state=1.3>,
+#  :fallback=>nil,
+#  :pool=>
+#   #<ConnectionPool:0x007f89afaeb470
+#    @available=
+#     #<ConnectionPool::TimedStack:0x007f89afaeb3d0
+#      @mutex=#<Mutex:0x007f89afaeb358>,
+#      @que=[nil],
+#      @resource=
+#       #<ConditionVariable:0x007f89afaeb330
+#        @waiters={},
+#        @waiters_mutex=#<Mutex:0x007f89afaeb2e0>>>,
+#    @key=:"current-70114667354600",
+#    @size=1,
+#    @timeout=0>,
+#  :exceptions=>[Exception, StandardError]}
+```
+
+Creating a new profile will copy from the default profile any unspecified options:
+
+```ruby
+Rhod.create_profile(:redis,
+  retries: 10,
+  backoffs: :^,
+  pool: ConnectionPool.new(size: 3, timeout: 10) { Redis.new },
+  exceptions: [Redis::BaseError])
+
+Rhod.with_redis("1") {|r, a| r.set('test',a)}
+# => "OK"
+Rhod.with_redis {|r| r.get('test')}
+# => "1"
 ```
 
 ## Idempotence Caution
@@ -79,14 +112,7 @@ Code within a `Rhod::Command` should avoid leaking memory and/or scope by having
 ### Good use of argument passing:
 
 ```ruby
-Rhod.execute("http://google.com") {|url| open(url).read}
-```
-
-You can still pass arguments to Rhod as the last argument passed to `Rhod.execute`
-
-```ruby
-# Attempt 5 times before failing
-Rhod.execute("http://google.com", :retries => 5) {|url| open(url).read}
+Rhod.with_default("http://google.com") {|url| open(url).read}
 ```
 
 ## Connection Pools
@@ -98,9 +124,12 @@ require 'rhod'
 require 'redis'
 require 'connection_pool'
 
-Rhod.connection_pools[:redis] = ConnectionPool.new(size:3, timeout:5) { Redis.new }
+Rhod.create_profile(:redis,
+  pool: ConnectionPool.new(size: 3, timeout: 5) { Redis.new }
+  )
 
-Rhod.execute(:pool => :redis) {|redis| redis.set("foo", "bar") }
+Rhod.with_redis {|redis| redis.set("foo", "bar") }
+# => "OK"
 ```
 
 The connection is always the first argument passed into the block, the other arguments are passed in their original order after.
@@ -108,7 +137,7 @@ The connection is always the first argument passed into the block, the other arg
 ```ruby
 key   = "foo"
 value = "bar"
-Rhod.execute(key, value, :pool => :redis) {|redis, k, v| redis.set(k, v) }
+Rhod.with_redis(key, value) {|redis, k, v| redis.set(k, v) }
 ```
 
 ## Contributing
