@@ -63,7 +63,7 @@ Or install it yourself as:
 
 ## Configuration
 
-To configure Rhod's defaults, just overwrite the default profile with any changes you'd like to make.
+To configure Rhod's defaults, just overwrite the default profile with any changes you'd like to make. If you're on Rails, a good place for your profiles is `config/initializers/rhod.rb`
 
 ```ruby
 Rhod.create_profile(:default, retries: 10)
