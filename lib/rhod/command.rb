@@ -19,7 +19,6 @@ class Rhod::Command
     @fallback = opts[:fallback]
 
     @pool = opts[:pool]
-    @pool ||= ConnectionPool.new(size: 1, timeout: 0) { nil }
 
     @exceptions = opts[:exceptions]
     @exceptions ||= EXCEPTIONS
@@ -36,10 +35,13 @@ class Rhod::Command
 
   def execute
     begin
-      @pool.with do |conn|
-        @args = [conn].concat(@args)
-        @args[0] == nil ? @args.shift : nil
+      if @pool
+        @pool.with do |conn|
+          @args = [conn].concat(@args)
 
+          @request.call(*@args)
+        end
+      else
         @request.call(*@args)
       end
     rescue *@exceptions

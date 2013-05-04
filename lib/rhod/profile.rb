@@ -32,6 +32,6 @@ Rhod::Profile.new(:default,
   retries: 0,
   backoffs: Rhod::Backoffs::Logarithmic.new(1.3),
   fallback: nil,
-  pool: ConnectionPool.new(size: 1, timeout: 0) { nil },
+  pool: nil,
   exceptions: [Exception, StandardError],
 )
