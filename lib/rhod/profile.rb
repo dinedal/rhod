@@ -2,7 +2,7 @@ class Rhod::Profile < Hash
   @@profiles = {}
 
   def initialize(name, options={})
-    # When creating new profiles, copy from the global default, incase it was customized.
+    # When creating new profiles, copy from the global default, in case it was customized.
     if @@profiles[:default]
       default = @@profiles[:default].dup
     else
@@ -29,9 +29,11 @@ class Rhod::Profile < Hash
 end
 
 Rhod::Profile.new(:default,
-  retries: 0,
+  retries: 5,
   backoffs: Rhod::Backoffs::Logarithmic.new(1.3),
-  fallback: nil,
-  pool: nil,
   exceptions: [Exception, StandardError],
+)
+
+Rhod::Profile.new(:constant,
+  backoffs: Rhod::Backoffs::Constant.new(1)
 )
