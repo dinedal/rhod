@@ -1,4 +1,5 @@
 require 'connection_pool'
+require 'logger'
 require_relative "rhod/version"
 require_relative "rhod/backoffs"
 require_relative "rhod/command"
