@@ -10,7 +10,7 @@ class Rhod::Command
     @request        = block
 
     @retries        = opts[:retries]
-    @retries      ||= 0
+    @retries      ||= 5
     @attempts       = 0
     
     @logger         = opts[:logger] || Logger.new(STDOUT)
