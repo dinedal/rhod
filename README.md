@@ -63,6 +63,30 @@ Or install it yourself as:
 
 ## Configuration
 
+### Default Profiles
+[default_profile Settings](https://github.com/dinedal/rhod/blob/master/lib/rhod/profile.rb#L31)
+
+[constant_profile Settings](https://github.com/dinedal/rhod/blob/master/lib/rhod/profile.rb#L37)
+```ruby
+# Rhod has two default Profiles:
+Rhod.with_default {raise 'e'}
+# output:
+# W, [2013-05-26T10:54:04.157378 #75969]  WARN -- : Exception encountered in Rhod Block: e.  Attempt 1 in 0.76 secs
+# W, [2013-05-26T10:54:04.915695 #75969]  WARN -- : Exception encountered in Rhod Block: e.  Attempt 2 in 2.40 secs
+# W, [2013-05-26T10:54:07.320192 #75969]  WARN -- : Exception encountered in Rhod Block: e.  Attempt 3 in 3.44 secs
+# ...
+# RuntimeError: e
+
+Rhod.with_constant {raise 'e'}
+# output:
+# W, [2013-05-26T10:54:04.157378 #75969]  WARN -- : Exception encountered in Rhod Block: e.  Attempt 1 in 1.00 secs
+# W, [2013-05-26T10:54:04.915695 #75969]  WARN -- : Exception encountered in Rhod Block: e.  Attempt 2 in 1.00 secs
+# W, [2013-05-26T10:54:07.320192 #75969]  WARN -- : Exception encountered in Rhod Block: e.  Attempt 3 in 1.00 secs
+# ...
+# RuntimeError: e
+```
+
+### Creating or Editing a New Profile
 To configure Rhod's defaults, just overwrite the default profile with any changes you'd like to make. If you're on Rails, a good place for your profiles is `config/initializers/rhod.rb`
 
 ```ruby
@@ -93,7 +117,10 @@ Rhod.create_profile(:redis,
   retries: 10,
   backoffs: :^,
   pool: ConnectionPool.new(size: 3, timeout: 10) { Redis.new },
-  exceptions: [Redis::BaseError])
+  exceptions: [Redis::BaseError],
+  enable_logging: false,
+  logger: Logger.new("log.txt")
+  )
 
 Rhod.with_redis("1") {|r, a| r.set('test',a)}
 # => "OK"
