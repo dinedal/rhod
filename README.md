@@ -95,7 +95,7 @@ Rhod.create_profile(:redis,
   backoffs: :^,
   pool: ConnectionPool.new(size: 3, timeout: 10) { Redis.new },
   exceptions: [Redis::BaseError],
-  logger: Logger.new("log.txt")
+  logger: Logger.new(STDOUT)
   )
 
 Rhod.with_redis("1") {|r, a| r.set('test',a)}
@@ -111,6 +111,14 @@ Code within a `Rhod::Command` block with reties in use must be _idempotent_, i.e
 ## Passing arguments
 
 Code within a `Rhod::Command` should avoid leaking memory and/or scope by having arguments passed to it:
+
+## Logging
+
+Rhod can optionally log all failures, very useful for debugging. Just set a logger in a profile and they will be logged at the level `:warn`
+
+```ruby
+Rhod.create_profile(:verbose, logger: Logger.new(STDOUT))
+```
 
 ### Good use of argument passing:
 
