@@ -1,3 +1,10 @@
+# v0.1.2
+Added logging as a feature - dleung - PR #8
+
+# v0.1.0 & v0.1.1
+Changed backoffs to be threadsafe, requiring an API change.
+Added support for profiles so commonly used Rhod settings could be located in one place.
+
 # v0.0.3
 Add support for connection pooling to be attached to a Rhod command.
 
