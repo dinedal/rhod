@@ -33,7 +33,3 @@ Rhod::Profile.new(:default,
   backoffs: Rhod::Backoffs::Logarithmic.new(1.3),
   exceptions: [Exception, StandardError],
 )
-
-Rhod::Profile.new(:constant,
-  backoffs: Rhod::Backoffs::Constant.new(1)
-)

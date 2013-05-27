@@ -4,17 +4,14 @@ class Rhod::Command
 
   def initialize(*args, &block)
     opts            = args[-1].kind_of?(Hash) ? args.pop : {}
-    @args           = args
-    @args         ||= []
+    @args           = args || []
 
     @request        = block
 
-    @retries        = opts[:retries]
-    @retries      ||= 5
+    @retries        = opts[:retries] || 0
     @attempts       = 0
-    
-    @logger         = opts[:logger] || Logger.new(STDOUT)
-    @enable_logging = opts[:enable_logging].nil? ? true : opts[:enable_logging]
+
+    @logger         = opts[:logger]
 
     @backoffs       = Rhod::Backoffs.backoff_sugar_to_enumerator(opts[:backoffs])
     @backoffs     ||= Rhod::Backoffs::Logarithmic.new(1.3)
@@ -23,8 +20,7 @@ class Rhod::Command
 
     @pool           = opts[:pool]
 
-    @exceptions     = opts[:exceptions]
-    @exceptions    ||= EXCEPTIONS
+    @exceptions     = opts[:exceptions] || EXCEPTIONS
   end
 
   ### Class methods
@@ -51,7 +47,7 @@ class Rhod::Command
       @attempts += 1
       @next_attempt = @backoffs.next
       if @attempts <= @retries
-        @logger.warn("Exception encountered in Rhod Block: #{e.message}.  Attempt #{@attempts} in #{sprintf("%.2f", @next_attempt)} secs") if @logger.respond_to?(:warn) && @enable_logging
+        @logger.warn("Rhod - Caught an exception: #{e.message}.  Attempt #{@attempts} in #{sprintf("%.2f", @next_attempt)} secs") if @logger && @logger.respond_to?(:warn)
         sleep(@next_attempt)
         retry
       else

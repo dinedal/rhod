@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'stringio'
 require File.expand_path(File.dirname(__FILE__) + '/helper')
 
 describe Rhod::Command do
@@ -44,6 +45,17 @@ describe Rhod::Command do
             end
           end
           backoff.verify
+        end
+
+        describe "with logging" do
+          it "logs failures" do
+            test_log = Logger.new(output = StringIO.new)
+            begin
+              Rhod::Command.new(logger: test_log, retries: 1) {raise StandardError}.execute
+            rescue
+            end
+            output.string.must_match(/^W.*Rhod - Caught an exception.*Attempt \d in \d\.\d\d secs$/)
+          end
         end
 
       end
