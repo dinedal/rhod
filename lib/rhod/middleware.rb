@@ -2,7 +2,7 @@ class Rhod::Middleware
   class Rhod::InvalidMiddleware < Exception; end
 
   def initialize
-    @stack ||= []
+    @stack = []
   end
 
   def use(middleware, *args, &block)
