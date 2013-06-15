@@ -20,7 +20,7 @@ class Rhod::Profile < Hash
 
     if self[:middleware].respond_to?(:call)
       self[:middleware].call(self[:middleware_stack])
-    else
+    elsif self[:middleware]
       self[:middleware].each do |klass|
         self[:middleware_stack].use klass
       end

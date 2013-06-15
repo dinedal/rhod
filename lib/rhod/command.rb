@@ -4,25 +4,18 @@ class Rhod::Command
 
   def initialize(*args, &block)
     opts            = args[-1].kind_of?(Hash) ? args.pop : {}
-    @args           = args || []
-
-    @request        = block
-
-    @retries        = opts[:retries] || 0
-    @attempts       = 0
-
-    @logger         = opts[:logger]
-
-    @backoffs       = Rhod::Backoffs.backoff_sugar_to_enumerator(opts[:backoffs])
-    @backoffs     ||= Rhod::Backoffs::Logarithmic.new(1.3)
-
-    @fallback       = opts[:fallback]
-
-    @pool           = opts[:pool]
-
-    @exceptions     = opts[:exceptions] || EXCEPTIONS
-
-    @profile_name   = opts[:profile_name]
+    @env = {
+      :args           => args || [],
+      :request        => block,
+      :retries        => opts[:retries] || 0,
+      :attempts       => 0,
+      :logger         => opts[:logger],
+      :backoffs       => Rhod::Backoffs.backoff_sugar_to_enumerator(opts[:backoffs]) || Rhod::Backoffs::Logarithmic.new(1.3),
+      :fallback       => opts[:fallback],
+      :pool           => opts[:pool],
+      :exceptions     => opts[:exceptions] || EXCEPTIONS,
+      :profile_name   => opts[:profile_name],
+    }
   end
 
   ### Class methods
@@ -36,24 +29,24 @@ class Rhod::Command
 
   def execute
     begin
-      if @pool
-        @pool.with do |conn|
-          @args = [conn].concat(@args)
+      if @env[:pool]
+        @env[:pool].with do |conn|
+          @env[:args] = [conn].concat(@env[:args])
 
-          @request.call(*@args)
+          @env[:request].call(*@env[:args])
         end
       else
-        @request.call(*@args)
+        @env[:request].call(*@env[:args])
       end
-    rescue *@exceptions => e
-      @attempts += 1
-      @next_attempt = @backoffs.next
-      if @attempts <= @retries
-        @logger.warn("Rhod - Caught an exception: #{e.message}.  Attempt #{@attempts} in #{sprintf("%.2f", @next_attempt)} secs") if @logger && @logger.respond_to?(:warn)
-        sleep(@next_attempt)
+    rescue *@env[:exceptions] => e
+      @env[:attempts] += 1
+      @env[:next_attempt] = @env[:backoffs].next
+      if @env[:attempts] <= @env[:retries]
+        @env[:logger].warn("Rhod - Caught an exception: #{e.message}.  Attempt #{@env[:attempts]} in #{sprintf("%.2f", @env[:next_attempt])} secs") if @env[:logger] && @env[:logger].respond_to?(:warn)
+        sleep(@env[:next_attempt])
         retry
       else
-        return @fallback.call(*@args) if @fallback
+        return @env[:fallback].call(*@env[:args]) if @env[:fallback]
         raise
       end
     end
