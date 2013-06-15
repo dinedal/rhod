@@ -15,6 +15,7 @@ class Rhod::Command
       :pool           => opts[:pool],
       :exceptions     => opts[:exceptions] || EXCEPTIONS,
       :profile_name   => opts[:profile_name],
+      :middleware     => opts[:middleware_stack] || Rhod::Middleware.new,
     }
   end
 
@@ -33,22 +34,47 @@ class Rhod::Command
         @env[:pool].with do |conn|
           @env[:args] = [conn].concat(@env[:args])
 
-          @env[:request].call(*@env[:args])
+          call_middleware_before_request
+          @env[:result] = @env[:request].call(*@env[:args])
+          call_middleware_after_request
+          @env[:result]
         end
       else
-        @env[:request].call(*@env[:args])
+        call_middleware_before_request
+        @env[:result] = @env[:request].call(*@env[:args])
+        call_middleware_after_request
+        @env[:result]
       end
     rescue *@env[:exceptions] => e
       @env[:attempts] += 1
       @env[:next_attempt] = @env[:backoffs].next
       if @env[:attempts] <= @env[:retries]
         @env[:logger].warn("Rhod - Caught an exception: #{e.message}.  Attempt #{@env[:attempts]} in #{sprintf("%.2f", @env[:next_attempt])} secs") if @env[:logger] && @env[:logger].respond_to?(:warn)
+        call_middleware_on_error
         sleep(@env[:next_attempt])
         retry
       else
+        call_middleware_on_failure
         return @env[:fallback].call(*@env[:args]) if @env[:fallback]
         raise
       end
     end
   end
+
+  def call_middleware_before_request
+    @env = @env[:middleware].on_before(@env)
+  end
+
+  def call_middleware_after_request
+    @env = @env[:middleware].on_after(@env)
+  end
+
+  def call_middleware_on_error
+    @env = @env[:middleware].on_error(@env)
+  end
+
+  def call_middleware_on_failure
+    @env = @env[:middleware].on_failure(@env)
+  end
+
 end
