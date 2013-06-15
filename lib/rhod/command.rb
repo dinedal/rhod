@@ -21,6 +21,8 @@ class Rhod::Command
     @pool           = opts[:pool]
 
     @exceptions     = opts[:exceptions] || EXCEPTIONS
+
+    @profile_name   = opts[:profile_name]
   end
 
   ### Class methods

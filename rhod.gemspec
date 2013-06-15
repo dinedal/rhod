@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "pry"
   spec.add_development_dependency "minitest", "~> 4.4.0"
   spec.add_development_dependency "turn", "~> 0.9.6"
+  spec.add_development_dependency "middleware", "~> 0.1.0"
 
   spec.add_dependency "connection_pool", "~> 1.0.0"
 end

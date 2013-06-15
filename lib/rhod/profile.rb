@@ -13,6 +13,8 @@ class Rhod::Profile < Hash
 
     options.each {|k,v| self[k] = v }
 
+    self[:profile_name] = name
+
     # Syntax sugar: named .with_#{profile} methods on this class and the module
     @@profiles[name] = self
 
