@@ -13,6 +13,21 @@ class Rhod::Profile < Hash
 
     options.each {|k,v| self[k] = v }
 
+    self[:profile_name] = name
+
+    # Middleware stack construction
+    self[:middleware_stack] = Rhod::Middleware.new
+
+    if self[:middleware].respond_to?(:call)
+      self[:middleware].call(self[:middleware_stack])
+    elsif self[:middleware]
+      self[:middleware].each do |klass|
+        self[:middleware_stack].use klass
+      end
+    end
+
+    self[:middleware_stack].build_stack
+
     # Syntax sugar: named .with_#{profile} methods on this class and the module
     @@profiles[name] = self
 
