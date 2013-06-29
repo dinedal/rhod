@@ -98,7 +98,7 @@ describe Rhod::Command do
       end
 
       describe "with middleware" do
-        it "calls the before and after hook" do
+        it "triggers the before and after event" do
           pool = ConnectionPool.new(size: 1, timeout: 0) { :conn }
 
           @stack = MiniTest::Mock.new
@@ -108,8 +108,8 @@ describe Rhod::Command do
             pool: pool
           ) {|a| a}
           env = cmd.instance_eval {@env}
-          @stack.expect :on_before, env, [Hash]
-          @stack.expect :on_after, env, [Hash]
+          @stack.expect :on, env, [:before, Hash]
+          @stack.expect :on, env, [:after, Hash]
           cmd.execute
           @stack.verify
         end
@@ -119,24 +119,24 @@ describe Rhod::Command do
     end
 
     describe "with middleware" do
-      it "calls the before and after hook" do
+      it "triggers the before and after event" do
         @stack = MiniTest::Mock.new
         cmd = Rhod::Command.new(middleware_stack: @stack) {|a| a}
         env = cmd.instance_eval {@env}
-        @stack.expect :on_before, env, [Hash]
-        @stack.expect :on_after, env, [Hash]
+        @stack.expect :on, env, [:before, Hash]
+        @stack.expect :on, env, [:after, Hash]
         cmd.execute
         @stack.verify
       end
 
-      it "calls the failure hook" do
+      it "triggers the failure event" do
         @stack = MiniTest::Mock.new
         cmd = Rhod::Command.new(middleware_stack: @stack) do
           raise StandardError, "Problem"
         end
         env = cmd.instance_eval {@env}
-        @stack.expect :on_before, env, [Hash]
-        @stack.expect :on_failure, env, [Hash]
+        @stack.expect :on, env, [:before, Hash]
+        @stack.expect :on, env, [:failure, Hash]
 
         begin
           cmd.execute
@@ -146,7 +146,7 @@ describe Rhod::Command do
         @stack.verify
       end
 
-      it "calls the error hook" do
+      it "triggers the error event" do
         @stack = MiniTest::Mock.new
         cmd = Rhod::Command.new(
           middleware_stack: @stack,
@@ -154,9 +154,9 @@ describe Rhod::Command do
           raise StandardError, "Problem"
         end
         env = cmd.instance_eval {@env}
-        @stack.expect :on_before, env, [Hash]
-        @stack.expect :on_error, env, [Hash]
-        @stack.expect :on_failure, env, [Hash]
+        @stack.expect :on, env, [:before, Hash]
+        @stack.expect :on, env, [:error, Hash]
+        @stack.expect :on, env, [:failure, Hash]
 
         begin
           cmd.execute

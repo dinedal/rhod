@@ -62,19 +62,19 @@ class Rhod::Command
   end
 
   def call_middleware_before_request
-    @env = @env[:middleware].on_before(@env)
+    @env = @env[:middleware].on(:before, @env)
   end
 
   def call_middleware_after_request
-    @env = @env[:middleware].on_after(@env)
+    @env = @env[:middleware].on(:after, @env)
   end
 
   def call_middleware_on_error
-    @env = @env[:middleware].on_error(@env)
+    @env = @env[:middleware].on(:error, @env)
   end
 
   def call_middleware_on_failure
-    @env = @env[:middleware].on_failure(@env)
+    @env = @env[:middleware].on(:failure, @env)
   end
 
 end

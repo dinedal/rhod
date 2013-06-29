@@ -21,39 +21,13 @@ class Rhod::Middleware
     end
   end
 
-  def on_before(env)
+  def on(event, env)
     @stack.reduce(env) do |e, current_middleware|
-      if current_middleware.respond_to?(:before)
-        e = current_middleware.before(e)
+      if current_middleware.respond_to?(:on)
+        e = current_middleware.on(event, e)
       end
       e
     end
   end
 
-  def on_after(env)
-    @stack.reduce(env) do |e, current_middleware|
-      if current_middleware.respond_to?(:after)
-        e = current_middleware.after(e)
-      end
-      e
-    end
-  end
-
-  def on_error(env)
-    @stack.reduce(env) do |e, current_middleware|
-      if current_middleware.respond_to?(:error)
-        e = current_middleware.error(e)
-      end
-      e
-    end
-  end
-
-  def on_failure(env)
-    @stack.reduce(env) do |e, current_middleware|
-      if current_middleware.respond_to?(:failure)
-        e = current_middleware.failure(e)
-      end
-      e
-    end
-  end
 end
