@@ -1,3 +1,7 @@
+# v0.1.3
+Update connection_pool dep to 1.1.0
+Add middleware support - dinedal - PR #9
+
 # v0.1.2
 Added logging as a feature - dleung - PR #8
 
