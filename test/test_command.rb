@@ -96,7 +96,77 @@ describe Rhod::Command do
         pool = ConnectionPool.new(size: 1, timeout: 0) { :conn }
         Rhod::Command.new(1, pool: pool) {|a, b| [a,b]}.execute.must_equal [:conn, 1]
       end
+
+      describe "with middleware" do
+        it "triggers the before and after event" do
+          pool = ConnectionPool.new(size: 1, timeout: 0) { :conn }
+
+          @stack = MiniTest::Mock.new
+
+          cmd = Rhod::Command.new(
+            middleware_stack: @stack,
+            pool: pool
+          ) {|a| a}
+          env = cmd.instance_eval {@env}
+          @stack.expect :on, env, [:before, Hash]
+          @stack.expect :on, env, [:after, Hash]
+          cmd.execute
+          @stack.verify
+        end
+
+      end
+
     end
+
+    describe "with middleware" do
+      it "triggers the before and after event" do
+        @stack = MiniTest::Mock.new
+        cmd = Rhod::Command.new(middleware_stack: @stack) {|a| a}
+        env = cmd.instance_eval {@env}
+        @stack.expect :on, env, [:before, Hash]
+        @stack.expect :on, env, [:after, Hash]
+        cmd.execute
+        @stack.verify
+      end
+
+      it "triggers the failure event" do
+        @stack = MiniTest::Mock.new
+        cmd = Rhod::Command.new(middleware_stack: @stack) do
+          raise StandardError, "Problem"
+        end
+        env = cmd.instance_eval {@env}
+        @stack.expect :on, env, [:before, Hash]
+        @stack.expect :on, env, [:failure, Hash]
+
+        begin
+          cmd.execute
+        rescue
+        end
+
+        @stack.verify
+      end
+
+      it "triggers the error event" do
+        @stack = MiniTest::Mock.new
+        cmd = Rhod::Command.new(
+          middleware_stack: @stack,
+          retries: 1) do
+          raise StandardError, "Problem"
+        end
+        env = cmd.instance_eval {@env}
+        @stack.expect :on, env, [:before, Hash]
+        @stack.expect :on, env, [:error, Hash]
+        @stack.expect :on, env, [:failure, Hash]
+
+        begin
+          cmd.execute
+        rescue
+        end
+
+        @stack.verify
+      end
+    end
+
 
   end
 end
