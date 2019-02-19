@@ -32,7 +32,7 @@ Rhod allows you to fully customize how your application reacts when it can't rea
 
   - [Fail Fast](https://github.com/dinedal/rhod/wiki/Fail-Fast)
   - [Retry N times before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-before-Fail)
-  - [Retry N times with progressive backoffs before Fail](Retry-N-times-with-progressive-backoffs-before-Fail)
+  - [Retry N times with progressive backoffs before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-with-progressive-backoffs-before-Fail)
   - [Fail Silent](https://github.com/dinedal/rhod/wiki/Fail-Silent)
   - [Fail w/ Fallback](https://github.com/dinedal/rhod/wiki/Fail-with-Fallback)
   - [Primary / Secondary ("hot spare") switch over](https://github.com/dinedal/rhod/wiki/Primary-Secondary-Switchover)
