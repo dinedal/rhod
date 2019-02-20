@@ -18,7 +18,7 @@ Rhod helps you handle failures gracefully, even during a firefight. When your co
 
 ## Usage
 
-Rhod has a very simple API. Design your application as you would normally, then enclose network accessing portions of your code with:
+Rhod has a very simple API. Design your application as you would normally, then enclose the network accessing portions of your code with:
 
 ```ruby
 Rhod.with_default do
@@ -28,14 +28,14 @@ end
 
 This implements the [Fail Fast](https://github.com/dinedal/rhod/wiki/Fail-Fast) scenario by default.
 
-Rhod allows you to fully customize how your application reacts when it can't reach a service it needs. but by default it is configured for a 'fail fast' scenario. With some configuration, Rhod can support the following failure scenarios and variations on them:
+Rhod allows you to fully customize how your application reacts when it can't reach a service it needs. But by default it is configured for a 'fail fast' scenario. With some configuration, Rhod can support the following failure scenarios and variations on them:
 
-  - [Fail Fast](https://github.com/dinedal/rhod/wiki/Fail-Fast)
-  - [Retry N times before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-before-Fail)
-  - [Retry N times with progressive backoffs before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-with-progressive-backoffs-before-Fail)
-  - [Fail Silent](https://github.com/dinedal/rhod/wiki/Fail-Silent)
-  - [Fail w/ Fallback](https://github.com/dinedal/rhod/wiki/Fail-with-Fallback)
-  - [Primary / Secondary ("hot spare") switch over](https://github.com/dinedal/rhod/wiki/Primary-Secondary-Switchover)
+-   [Fail Fast](https://github.com/dinedal/rhod/wiki/Fail-Fast)
+-   [Retry N times before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-before-Fail)
+-   [Retry N times with progressive backoffs before Fail](https://github.com/dinedal/rhod/wiki/Retry-N-times-with-progressive-backoffs-before-Fail)
+-   [Fail Silent](https://github.com/dinedal/rhod/wiki/Fail-Silent)
+-   [Fail w/ Fallback](https://github.com/dinedal/rhod/wiki/Fail-with-Fallback)
+-   [Primary / Secondary ("hot spare") switch over](https://github.com/dinedal/rhod/wiki/Primary-Secondary-Switchover)
 
 Check the [wiki](https://github.com/dinedal/rhod/wiki/) for more documentation.
 
@@ -64,7 +64,8 @@ Or install it yourself as:
 ## Configuration
 
 ### Creating or Editing a New Profile
-To configure Rhod's defaults, just overwrite the default profile with any changes you'd like to make. If you're on Rails, a good place for your profiles is `config/initializers/rhod.rb`
+
+To configure Rhod's defaults, just overwrite the default profile with any changes you'd like to make. If you're on Rails, a good place for your Rhod profiles is `config/initializers/rhod.rb`
 
 ```ruby
 Rhod.create_profile(:default, retries: 10)
@@ -106,15 +107,15 @@ Rhod.with_redis {|r| r.get('test')}
 
 ## Idempotence Caution
 
-Code within a `Rhod::Command` block with reties in use must be _idempotent_, i.e., safe to run multiple times.
+Code within a `Rhod::Command` block with retries in use must be _idempotent_, i.e., safe to run multiple times.
 
 ## Passing arguments
 
-Code within a `Rhod::Command` should avoid leaking memory and/or scope by having arguments passed to it:
+Code within a `Rhod::Command` should avoid leaking memory and/or scope by having arguments passed to it.
 
 ## Logging
 
-Rhod can optionally log all failures, very useful for debugging. Just set a logger in a profile and they will be logged at the level `:warn`
+Rhod can optionally log all failures--very useful for debugging. Just set a logger in a profile and they will be logged at the level `:warn`
 
 ```ruby
 Rhod.create_profile(:verbose, logger: Logger.new(STDOUT))
@@ -128,7 +129,7 @@ Rhod.with_default("http://google.com") {|url| open(url).read}
 
 ## Connection Pools
 
-Sometimes you're connecting to a remote reasource using a driver that doesn't support connection pooling, which will limit the amount of strain your application puts on that reasource, and allow for reuse of existing connections instead of increasing overhead by reconnecting each time. Connection Pool support in Rhod is provided by the [connection_pool](https://github.com/mperham/connection_pool) gem.
+Sometimes you're connecting to a remote resource using a driver that doesn't support connection pooling, which will limit the amount of strain your application puts on that resource, and allow for reuse of existing connections instead of increasing overhead by reconnecting each time. Connection Pool support in Rhod is provided by the [connection_pool](https://github.com/mperham/connection_pool) gem.
 
 ```ruby
 require 'rhod'
